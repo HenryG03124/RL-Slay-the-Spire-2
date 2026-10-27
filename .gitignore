@@ -1,0 +1,6 @@
+.setup/
+results/
+__pycache__/
+*.py[cod]
+.tools/
+.venv/

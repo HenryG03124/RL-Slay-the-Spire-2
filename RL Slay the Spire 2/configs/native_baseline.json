@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/favet/divine-sts2",
+  "source_commit": "7cb715916fc9abfb0281c0adf4939c74468e05a4",
+  "game_version": "v0.107.1",
+  "game_commit": "59260271",
+  "product_version": "0.1.0+59260271157f76a2896f0eab5bc6ea1245d8b314",
+  "files": {
+    "data_sts2_windows_x86_64/sts2.dll": "A1F9E653F1E28E4076558FEE1E60D218619CB7E057B887C6417F62C62C6D7A52",
+    "SlayTheSpire2.pck": "42520EB8B0911C6C0F0BD102D92B33F41ABD4D26B83489817D0A6DBD7DD48587"
+  },
+  "sources": [
+    "https://github.com/favet/divine-sts2/blob/7cb715916fc9abfb0281c0adf4939c74468e05a4/docs/version-compatibility.md",
+    "https://github.com/favet/divine-sts2/blob/7cb715916fc9abfb0281c0adf4939c74468e05a4/python/sts2_native_sim/cli.py#L17-L20"
+  ]
+}
