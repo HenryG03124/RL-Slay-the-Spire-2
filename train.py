@@ -11,34 +11,42 @@ from game.environment import CombatEnv
 
 lr = 0.0003
 gamma = 1.0
+damage_penalty = 0.05
 max_steps = 100
-num_episodes = 100
+num_episodes = 500
 random_seed = 0
+seed_start = 1000
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.mps.is_available() else "cpu"
 
-def get_reward(state):
-    if state["terminated"]:
-        if state["victory"]:
-            return 1
-        else:
-            return -1
-    else:
-        return 0
+def get_hp(state):
+    for creature in state["observation"]["combat"]["creatures"]:
+        if creature["side"] == "Player":
+            return creature["hp"]
 
-def get_V_target(critic , next_state , next_obs , gamma):
+def get_reward(state , next_state):
+    hp_loss = max(0 , get_hp(state) - get_hp(next_state))
+    reward = -damage_penalty * hp_loss
+    if next_state["terminated"]:
+        if next_state["victory"]:
+            reward += 1
+        else:
+            reward -= 1
+    return reward
+
+def get_target_V(critic , state , next_state , next_obs , gamma):
     model = critic
     with torch.no_grad():
         predicted = model(next_obs) #[B , 1]
-    return get_reward(next_state) + gamma * (1 - float(next_state["terminated"])) * predicted #[B , 1]
+    return get_reward(state , next_state) + gamma * (1 - float(next_state["terminated"])) * predicted #[B , 1]
 
-def get_loss(critic , obs , next_state , next_obs , log_prob , gamma):
-    model = critic
-    predicted = model(obs) #[B , 1]
-    target = get_V_target(critic , next_state , next_obs , gamma) #[B , 1]
+def get_loss(critic , state , obs , next_state , next_obs , log_prob , gamma):
+    model_critic = critic
+    predicted = model_critic(obs) #[B , 1]
+    target = get_target_V(critic , state , next_state , next_obs , gamma) #[B , 1]
     critic_loss = ((target - predicted) ** 2).mean() #[]
-    advantge = target - predicted #[B , 1]
-    advantge = advantge.detach().squeeze(-1) #[B , 1] -> [B]
-    actor_loss = (-log_prob * advantge).mean() #[]
+    critic_advantge = target - predicted #[B , 1]
+    critic_advantge = critic_advantge.detach().squeeze(-1) #[B , 1] -> [B]
+    actor_loss = (-log_prob * critic_advantge).mean() #[]
 
     return critic_loss , actor_loss
 
@@ -55,8 +63,9 @@ critic_loss_set = []
 reward_set = []
 
 for episode in range(num_episodes):
+    episode_seed = seed_start + episode
     with CombatEnv(max_actions = max_steps) as env:
-        state = env.reset()
+        state = env.reset(seed = episode_seed)
         records = []
         total_actor_loss = 0
         total_critic_loss = 0
@@ -76,7 +85,7 @@ for episode in range(num_episodes):
 
             next_state = env.step(native_action)
             next_obs = torch.tensor(get_observation(next_state) , dtype = torch.float32 , device = device).unsqueeze(0) #[32] -> [B , 32]
-            critic_loss , actor_loss = get_loss(critic , obs , next_state , next_obs , log_prob , gamma) #[] , []
+            critic_loss , actor_loss = get_loss(critic , state , obs , next_state , next_obs , log_prob , gamma) #[] , []
 
             actor_optimizer.zero_grad()
             critic_optimizer.zero_grad()
@@ -89,7 +98,8 @@ for episode in range(num_episodes):
                 "step" : step + 1 ,
                 "action" : action.item() ,
                 "action_id" : native_action ,
-                "reward" : get_reward(next_state) ,
+                "reward" : get_reward(state , next_state) ,
+                "hp" : get_hp(next_state) ,
                 "critic_loss" : critic_loss.item() ,
                 "actor_loss" : actor_loss.item() ,
                 "terminated" : next_state["terminated"] ,
@@ -110,9 +120,12 @@ for episode in range(num_episodes):
             "terminated" : state["terminated"] ,
             "truncated" : env.truncated ,
             "victory" : state["victory"] ,
+            "final_hp" : get_hp(state) ,
             "lr" : lr ,
             "gamma" : gamma ,
+            "damage_penalty" : damage_penalty ,
             "random_seed" : random_seed ,
+            "episode_seed" : episode_seed ,
             "max_steps" : max_steps ,
             "transitions" : records ,
             "episode" : episode + 1 ,
@@ -153,7 +166,6 @@ axes[2].plot(episodes , reward_set , color = "green" , label = "Total Reward")
 axes[2].set_xlabel("Episode")
 axes[2].set_ylabel("Reward")
 axes[2].set_title("Episode Reward Curve")
-axes[2].set_yticks([-1 , 0 , 1])
 axes[2].grid(True)
 axes[2].legend()
 

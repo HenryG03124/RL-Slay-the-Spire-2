@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import queue
+import random
 import subprocess
 import sys
 import tempfile
@@ -258,10 +259,17 @@ class CombatEnv:
             self.failure = str(error)
             raise
 
-    def reset(self):
+    def reset(self , seed = None):
         if self.actions >= self.max_actions:
             raise RuntimeError("Action budget exhausted; create a new environment.")
-        self.state = self.request("reset" , self.scenario)
+        scenario = self.scenario.copy()
+        if seed is not None:
+            scenario["seed"] = str(seed)
+            cards = []
+            for card in scenario["deck"]:
+                cards.append(card["instance_id"])
+            scenario["initial_hand"] = random.Random(scenario["seed"]).sample(cards , 5)
+        self.state = self.request("reset" , scenario)
         self.truncated = False
         return self.state
 

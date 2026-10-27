@@ -88,3 +88,50 @@ obs: torch.Tensor
         31: 出牌区中 Bash 数量
     ]
 }
+
+get_action_candidates(state): list[dict]，长度 N（当前合法动作数）
+
+candidate_actions:
+[
+    {
+        action_id: str（当前状态下唯一的动作 ID，原样传给 env.step）
+        kind: str（play_card 或 end_turn，多个候选可以属于同一类别）
+        card: dict | None（按 instance_id 找到的完整手牌字典，结束回合为 None）
+        target: dict | None（按 combat_id 找到的完整生物字典，无显式目标为 None）
+    }
+]
+
+每项对应一个合法动作，与 state["legal_actions"] 顺序相同。
+同名的不同牌、同一张牌的不同目标分别保留，不合并。
+target 表示操作时指定的目标，不是所有受到效果影响的生物。
+结束回合的 card 和 target 都是 None；终止状态返回 []。
+当前只支持 play_card 和 end_turn，其他动作类型报错。
+
+get_action_features(candidate_actions): np.ndarray
+
+features: np.ndarray
+{
+    dtype: np.float32
+    shape: [N , 10]（N 是候选数，没有 batch 维）
+    每行:
+    [
+        0: 是否结束回合
+        1: 是否 Strike
+        2: 是否 Defend
+        3: 是否 Bash
+        4: 卡牌能量费用 / 3
+        5: 卡牌升级次数
+
+        6: 是否有显式目标
+        7: 目标当前生命 / 50
+        8: 目标最大生命 / 50
+        9: 目标格挡 / 20
+    ]
+}
+
+第 i 行对应 candidate_actions[i]；是否类特征用 1 或 0。
+结束回合只有第 0 项为 1，其余为 0。
+target 为 None 时，第 6 到 9 项都是 0。
+空列表返回形状 (0 , 10) 的数组。
+当前只编码 Strike、Defend、Bash 和结束回合，其他卡种或动作类型报错。
+字符串 ID 不参与数值编码，执行时使用对应候选的 action_id。
