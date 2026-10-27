@@ -19,7 +19,7 @@
 | 原生合法动作 | `state["legal_actions"]` |
 | 战斗是否结束 | `state["terminated"]` |
 | 是否获胜 | `state["victory"]` |
-| 四动作 mask 和对应原生动作 | `get_actions(state)`，见 [action_space.py](../action_space.py) |
+| 四动作 mask 和对应原生动作 | `get_actions(state)`，见 [action_space.py](../../action_space.py) |
 
 **不要把整个 `state` 或原始 `observation` 直接送给模型。** 其中有随机数状态、真实抽牌顺序和内部标识。可用于决策的字段见第 12 节。
 
@@ -66,7 +66,7 @@ combat = obs["combat"]
 
 ### 探针摘要和四动作映射
 
-`results/probes/.../result.json` 是本项目的检查报告，里面的 `initial`、`after` 是 `visible_summary()` 生成的摘要，不是原生 `state`。
+探针检查报告保存在系统临时目录 `sts2-rl/probes/`，里面的 `initial`、`after` 是 `visible_summary()` 生成的摘要，不是原生 `state`。
 
 摘要会把敌人意图放到 `creatures[*].intents`，把手牌放到顶层 `hand`，把牌堆变成 `pile_counts`，并去掉部分内部字段。原生格式的路径则分别是 `creatures[*].next_move.intents`、`combat.piles`。
 
@@ -447,14 +447,14 @@ print(mask)                                         # [True, True, True, True]
 - [Main.cs](../.setup/divine-sts2/src/Sts2.NativeSim.GodotHost/Main.cs)：第 14 行序列化规则，第 196 行起的请求分发。
 - [PersistentNativeCombatEnvironment.cs](../.setup/divine-sts2/src/Sts2.NativeSim.Core/PersistentNativeCombatEnvironment.cs)：第 673 行起生成战斗快照，第 734 行起生成合法动作，第 1677 行起生成评分特征，第 1920 行起生成 creature、intent 和 card。
 - [observations.py](../.setup/divine-sts2/python/sts2_native_sim/observations.py)：上游观测投影；其输出与原始状态格式不同。
-- [单步协议记录](../results/probes/20261026_184841_036041_single/protocol.jsonl)与[闭环协议记录](../results/probes/20261026_184907_348314_bounded/protocol.jsonl)：本文实例来源。
+- [reset 样例](examples/reset_response.json)、[step 样例](examples/step_response.json)与[终止样例](examples/terminal_response.json)：保留的协议数据示例。
 - [probe_combat.py](../scripts/probe_combat.py)：本项目摘要与日志的产生方式。
 
 更新游戏或原生工具后，重新核对版本、字段和真实响应。本文的战斗终止语义不能直接套到上游完整 run 模式；完整 run 中打赢一场战斗后还可能进入奖励或地图阶段。
 
 ## 14 当前模型输入 32 维
 
-[observation.py](../observation.py) 提供 `get_observation(state)`，返回形状为 `(32,)` 的 NumPy `float32` 数组。`feature_names` 按同样顺序列出所有名称；`observation_size` 为 32。mask 保持单独传入动作选择函数。
+[observation.py](../../observation.py) 提供 `get_observation(state)`，返回形状为 `(32,)` 的 NumPy `float32` 数组。`feature_names` 按同样顺序列出所有名称；`observation_size` 为 32。mask 保持单独传入动作选择函数。
 
 | 索引 | 内容 | 缩放 |
 |---|---|---|
@@ -477,6 +477,6 @@ print(mask)                                         # [True, True, True, True]
 
 这些除数只是缩放尺度，不是硬上限，不把结果裁剪到 `[0, 1]`。例如能量为 6 时对应特征为 2。终止后没有存活敌人时，敌人和意图部分均填零。
 
-当前编码器只支持既定角色、单 Nibbit、三种未改动基础牌、无遗物药水、无玩家状态，以及敌人的力量和易伤。未知卡牌、状态、意图或额外选择会报错，不静默忽略。易伤字段已通过 [Bash 定向探针](../results/probes/20261026_200426_272735_bash/result.json)确认。
+当前编码器只支持既定角色、单 Nibbit、三种未改动基础牌、无遗物药水、无玩家状态，以及敌人的力量和易伤。未知卡牌、状态、意图或额外选择会报错，不静默忽略。
 
-它是供当前小任务使用的可见观测，不宣称是完整 Markov 状态；更一般敌人的隐藏行动历史等信息可能需要历史观测。已有 [编码检查](../results/observation/check.json)覆盖实际记录、敌人消失、易伤、牌堆顺序不变性，以及随机种子和内部标识不进入输入。
+它是供当前小任务使用的可见观测，不宣称是完整 Markov 状态；更一般敌人的隐藏行动历史等信息可能需要历史观测。

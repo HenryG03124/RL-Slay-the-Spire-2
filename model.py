@@ -11,9 +11,9 @@ class ActorNet(nn.Module):
         self.relu = nn.ReLU(inplace = True)
 
     def forward(self , obs):  #[B , 32]
-        out = self.L1(obs)
+        out = self.L1(obs) #[B , 64]
         out = self.relu(out)
-        out = self.L2(out)
+        out = self.L2(out) #[B , 4]
 
         return out
 
@@ -26,8 +26,8 @@ class CriticNet(nn.Module):
         self.relu = nn.ReLU(inplace = True)
 
     def forward(self , obs):  #[B , 32]
-        out = self.L1(obs)
+        out = self.L1(obs) #[B , 64]
         out = self.relu(out)
-        out = self.L2(out)
+        out = self.L2(out) #[B , 1]
 
         return out

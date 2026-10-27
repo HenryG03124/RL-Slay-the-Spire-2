@@ -1,0 +1,5 @@
+{
+    "files.simpleDialog.enable": false,
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python.defaultInterpreterPath": "C:/Users/HenryGuo/AppData/Local/Programs/Python/Python313/python.exe"
+}

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <AssemblyName>sts2-visible-bridge</AssemblyName>
+    <RootNamespace>Sts2.VisibleBridge</RootNamespace>
+    <GameDataDir Condition="'$(GameDataDir)' == '' and '$(STS2_GAME_ROOT)' != ''">$(STS2_GAME_ROOT)\data_sts2_windows_x86_64</GameDataDir>
+    <GameDataDir Condition="'$(GameDataDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64</GameDataDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="sts2" HintPath="$(GameDataDir)\sts2.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(GameDataDir)\0Harmony.dll" Private="false" />
+    <Reference Include="GodotSharp" HintPath="$(GameDataDir)\GodotSharp.dll" Private="false" />
+    <None Include="sts2-visible-bridge.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="PackageVisibleBridge" AfterTargets="Build">
+    <MakeDir Directories="$(OutputPath)package" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(OutputPath)package" />
+    <Copy SourceFiles="sts2-visible-bridge.json" DestinationFolder="$(OutputPath)package" />
+  </Target>
+</Project>

@@ -1,0 +1,20 @@
+STS2 Visible Control Bridge
+
+This directory includes code derived from divine-sts2:
+https://github.com/favet/divine-sts2
+Commit: 7cb715916fc9abfb0281c0adf4939c74468e05a4
+Original directory: src/Sts2.NativeSim.FullAppBridge
+Copyright (c) 2026 divine-sts2 contributors
+License: MIT; see LICENSE in this directory.
+
+Local changes for the RL Slay the Spire 2 project:
+- Separate sts2-visible-bridge assembly, mod identity, and build output.
+- Preserve the original game's visible presentation; no presentation-suppression patches.
+- Require a visible display and reset NonInteractiveMode.AutoSlayerCheck to false.
+- Publish the pending action receiver before reporting a decision boundary.
+- Reject invalid actions, repeated run starts, and unsupported ascension values.
+- Keep request IDs on error responses and report actual runtime metadata.
+- Reset the AutoSlayer watchdog while awaiting external input without selecting actions.
+
+The original game assemblies and assets are external dependencies and are not
+covered by the divine-sts2 MIT license or included in this source directory.

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)..\..\.setup\visible-bridge-build\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\.setup\visible-bridge-build\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

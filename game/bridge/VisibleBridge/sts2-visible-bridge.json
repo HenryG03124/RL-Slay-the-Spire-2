@@ -1,0 +1,10 @@
+{
+  "id": "sts2-visible-bridge",
+  "name": "STS2 Visible Control Bridge",
+  "author": "RL Slay the Spire 2",
+  "description": "Local coordinator control of the original visible game, with presentation enabled.",
+  "version": "0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": true
+}

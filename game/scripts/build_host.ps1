@@ -1,11 +1,12 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+$temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) 'sts2-rl'
 $sourceRoot = Join-Path $projectRoot '.setup\divine-sts2'
 $dotnetRoot = Join-Path $projectRoot '.tools\dotnet9'
-$buildProfile = Join-Path $projectRoot '.setup\build-profile'
+$buildProfile = Join-Path $temporaryRoot 'build-profile'
 $hostProject = Join-Path $sourceRoot 'src\Sts2.NativeSim.GodotHost\Sts2.NativeSim.GodotHost.csproj'
 
-# 本进程及其子进程使用项目内缓存，不修改系统环境变量。
+# Temporary build files; environment changes stay in this process.
 $env:DOTNET_ROOT = $dotnetRoot
 $env:DOTNET_ROOT_X64 = $dotnetRoot
 $env:DOTNET_CLI_HOME = Join-Path $buildProfile 'dotnet'
@@ -27,7 +28,7 @@ if ($LASTEXITCODE -ne 0 -or $sourceCommit -ne '7cb715916fc9abfb0281c0adf4939c744
     throw 'The native source revision does not match the reviewed baseline.'
 }
 
-# 使用已校验的 Godot 官方压缩包附带的本地 NuGet 包。
+# Restore from the bundled Godot packages.
 $packageSource = Join-Path $projectRoot '.tools\godot-4.5.1-mono\Godot_v4.5.1-stable_mono_win64\GodotSharp\Tools\nupkgs'
 $packageSourceXml = [System.Security.SecurityElement]::Escape($packageSource)
 @"
@@ -40,7 +41,7 @@ $packageSourceXml = [System.Security.SecurityElement]::Escape($packageSource)
 </configuration>
 "@ | Set-Content -LiteralPath (Join-Path $sourceRoot 'NuGet.Config') -Encoding utf8
 
-$logDirectory = Join-Path $projectRoot 'results\setup'
+$logDirectory = Join-Path $temporaryRoot 'build'
 New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
 $log = Join-Path $logDirectory ('build-' + [DateTimeOffset]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '.txt')
 & (Join-Path $dotnetRoot 'dotnet.exe') build $hostProject -c Debug --disable-build-servers -nodeReuse:false -maxcpucount:1 -p:UseSharedCompilation=false 2>&1 | Tee-Object -FilePath $log
